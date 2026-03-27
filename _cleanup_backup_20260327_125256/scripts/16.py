@@ -14,6 +14,7 @@ result_analysis/ にテキストファイルで保存する
 import subprocess
 import sys
 import os
+import re
 from pathlib import Path
 from datetime import datetime
 
@@ -71,6 +72,31 @@ def set_months(months: int):
 
     gen_path.write_text(text, encoding="utf-8")
     print(f"  MONTHS={months} に設定しました")
+
+
+def parse_period_and_days(text: str):
+    """11_analyze_patterns.py の出力から期間と営業日数を抽出"""
+    m_period = re.search(r"期間:\s*(\d{4}-\d{2}-\d{2})\s*〜\s*(\d{4}-\d{2}-\d{2})", text)
+    m_days = re.search(r"営業日数:\s*(\d+)\s*日", text)
+    period = None
+    days = None
+    if m_period:
+        period = (m_period.group(1), m_period.group(2))
+    if m_days:
+        days = int(m_days.group(1))
+    return period, days
+
+
+def validate_span(label: str, years: int, days: int | None):
+    """期間不足の取り違えを防ぐための緩い妥当性チェック"""
+    if days is None:
+        print(f"    [WARN] {label}: 営業日数を抽出できませんでした")
+        return
+
+    # 1年=約252営業日を想定し、75%未満なら不足と判定
+    min_days = int(years * 252 * 0.75)
+    if days < min_days:
+        print(f"    [WARN] {label}: 営業日数が少ない可能性 ({days}日, 期待目安>{min_days}日)")
 
 
 # ============================================================
@@ -134,17 +160,13 @@ def main():
         print(f"  [{label}] {years}年分（{months}ヶ月）の分析開始")
         print(f"{'='*60}")
 
-        # 10年分は既存データを使う（再生成しない）
-        if months == 120:
-            print("  10年分は既存データを使用します（スキップ）")
-        else:
-            # MONTHS を書き換えてデータ生成
-            print(f"\n  [1/6] データ生成中...")
-            set_months(months)
-            gen_output = run_script("10_generate_history.py", "データ生成")
-            # 最後の数行だけ表示
-            for line in gen_output.strip().split("\n")[-5:]:
-                print(f"    {line}")
+        # すべてのスパンで必ずデータ生成する（10年も含む）
+        print(f"\n  [1/6] データ生成中...")
+        set_months(months)
+        gen_output = run_script("10_generate_history.py", "データ生成")
+        # 最後の数行だけ表示
+        for line in gen_output.strip().split("\n")[-5:]:
+            print(f"    {line}")
 
         # 各分析を実行して結果を収集
         all_output = []
@@ -156,6 +178,12 @@ def main():
         for i, (script, desc) in enumerate(ANALYSIS_SCRIPTS, 2):
             print(f"\n  [{i}/6] {desc} 実行中...")
             output = run_script(script, desc)
+
+            if script == "11_analyze_patterns.py":
+                period, days = parse_period_and_days(output)
+                if period and days:
+                    print(f"    → 期間: {period[0]} 〜 {period[1]} / {days}日")
+                validate_span(label, years, days)
 
             # コンソールにも進捗表示
             lines = output.strip().split("\n") if output else []

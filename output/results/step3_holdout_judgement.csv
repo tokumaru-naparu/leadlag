@@ -1,0 +1,5 @@
+﻿condition,lhs,rhs,pass
+test_sharpe >= train_sharpe*0.70,2.269230908906349,2.597944549992927,False
+test_win_rate > 0.50,0.5321637426900585,0.5,True
+test_maxdd >= train_worst_round_maxdd*1.5,-0.19733710203145297,-0.183,False
+overall_pass,0.0,1.0,False

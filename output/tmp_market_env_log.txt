@@ -1,0 +1,66 @@
+📡 追加データ取得中...
+  日経平均: 0日分
+  VIX:      0日分
+  TOPIX:    0日分
+
+分析対象: 0 日
+
+=================================================================
+  市場環境別パフォーマンスレポート（10年分）
+=================================================================
+
+【① 日経平均トレンド環境別パフォーマンス】
+（20日移動平均からの乖離率で相場環境を分類）
+
+トレンド環境                     勝率     件数        平均R        累積R
+------------------------------------------------------------
+
+【② VIX水準別パフォーマンス】
+（VIX = 米国恐怖指数。高いほど市場が荒れている）
+（VIX 20以下=平静, 20-30=警戒, 30以上=パニック）
+
+VIX水準                    勝率     件数        平均R        累積R
+----------------------------------------------------------
+
+【③ 日本市場ボラティリティ別パフォーマンス】
+（TOPIX の20日間ボラティリティ）
+
+---STDERR---
+Failed to get ticker '^N225' reason: HTTPSConnectionPool(host='fc.yahoo.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='fc.yahoo.com', port=443): Failed to resolve 'fc.yahoo.com' ([Errno 11001] getaddrinfo failed)"))
+
+1 Failed download:
+['^N225']: Exception('%ticker%: No timezone found, symbol may be delisted')
+Failed to get ticker '^VIX' reason: HTTPSConnectionPool(host='fc.yahoo.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='fc.yahoo.com', port=443): Failed to resolve 'fc.yahoo.com' ([Errno 11001] getaddrinfo failed)"))
+
+1 Failed download:
+['^VIX']: Exception('%ticker%: No timezone found, symbol may be delisted')
+Failed to get ticker '1306.T' reason: HTTPSConnectionPool(host='fc.yahoo.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError("HTTPSConnection(host='fc.yahoo.com', port=443): Failed to resolve 'fc.yahoo.com' ([Errno 11001] getaddrinfo failed)"))
+
+1 Failed download:
+['1306.T']: Exception('%ticker%: No timezone found, symbol may be delisted')
+Traceback (most recent call last):
+  File "c:\Users\hg317\Desktop\projects\leadlag\scripts\13_analyze_market_env.py", line 172, in <module>
+    df["jp_vol_level"] = pd.qcut(
+                         ~~~~~~~^
+        df["topix_vol_prev"], q=4,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        labels=["Q1(低ボラ)", "Q2", "Q3", "Q4(高ボラ)"]
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "c:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\core\reshape\tile.py", line 384, in qcut
+    fac, bins = _bins_to_cuts(
+                ~~~~~~~~~~~~~^
+        x_idx,
+        ^^^^^^
+    ...<4 lines>...
+        duplicates=duplicates,
+        ^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "c:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\core\reshape\tile.py", line 487, in _bins_to_cuts
+    raise ValueError(
+    ...<2 lines>...
+    )
+ValueError: Bin edges must be unique: Index([nan, nan, nan, nan, nan], dtype='float64', name='topix_vol_prev').
+You can drop duplicate edges by setting the 'duplicates' kwarg

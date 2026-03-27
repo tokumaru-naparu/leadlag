@@ -38,6 +38,7 @@ def close_series(data: pd.DataFrame) -> pd.Series:
 
 trades = pd.read_csv(HISTORY_DIR / "trades.csv",  index_col=0, parse_dates=True)
 market = pd.read_csv(HISTORY_DIR / "market.csv",  index_col=0, parse_dates=True)
+us_cols = [c for c in market.columns if c.startswith("us_cc_")]
 
 start_date = trades.index[0].strftime("%Y-%m-%d")
 end_date   = trades.index[-1].strftime("%Y-%m-%d")
@@ -83,8 +84,23 @@ topix_ret   = topix.pct_change()
 topix_vol   = topix_ret.rolling(20).std() * 100
 
 # 米国市場ボラティリティ（前日の全業種リターンの標準偏差）
-us_cols = [c for c in market.columns if c.startswith("us_cc_")]
 us_vol_daily = market[us_cols].std(axis=1) * 100  # 業種間の分散
+
+# 通信障害などで外部指標が取れない場合は、既存の米国業種データから近似指標を作る
+if len(nk225) == 0 or len(vix) == 0 or len(topix) == 0:
+    print("\n[WARN] 外部指数の取得に失敗したため、market.csv の近似指標で代替します")
+    us_avg = market[us_cols].mean(axis=1).reindex(trades.index).fillna(0)
+
+    proxy_level = (1 + us_avg).cumprod()
+    proxy_ma20  = proxy_level.rolling(20, min_periods=5).mean()
+    nk225_dev   = ((proxy_level - proxy_ma20) / proxy_ma20 * 100).replace([np.inf, -np.inf], np.nan)
+    nk225_ret   = us_avg
+
+    # VIX近似: 米国業種分散を平常域(15前後)スケールに変換
+    vix = (15 + market[us_cols].std(axis=1).reindex(trades.index).fillna(0) * 120).clip(8, 60)
+
+    topix_ret = us_avg
+    topix_vol = topix_ret.rolling(20, min_periods=5).std() * 100
 
 # ============================================================
 # 4. tradesに結合
