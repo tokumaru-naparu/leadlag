@@ -1,10 +1,10 @@
 """
 send_daily_email_report.py
-GitHub Actionsで実行する日次メール送信スクリプト。
+GitHub Actionsで実行する日次メール送信スクリプト（3/20からの累積報告版）。
 
 前提:
 - scripts/08_signal_today.py 実行後に output/results/paper_trade_log.csv が更新される
-- SMTP情報は環境変数で渡す
+- output/results/test_mar20_to_today.csv に 3/20からの日次パフォーマンスが保存される
 
 必要な環境変数:
 - SMTP_HOST
@@ -16,7 +16,6 @@ GitHub Actionsで実行する日次メール送信スクリプト。
 任意の環境変数:
 - MAIL_FROM (未指定時はSMTP_USER)
 - TRADE_FEE_BPS_PER_SIDE (未指定時 5.0)
-- DAILY_RUN_LOG_PATH (未指定時 output/results/daily_run_output.txt)
 """
 
 from __future__ import annotations
@@ -33,6 +32,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS_DIR = ROOT / "output" / "results"
 LOG_CSV = RESULTS_DIR / "paper_trade_log.csv"
+PERF_CSV = RESULTS_DIR / "test_mar20_to_today.csv"
 
 
 def get_env(name: str, required: bool = True, default: str | None = None) -> str:
@@ -40,10 +40,6 @@ def get_env(name: str, required: bool = True, default: str | None = None) -> str
     if required and (value is None or value == ""):
         raise RuntimeError(f"Environment variable missing: {name}")
     return value if value is not None else ""
-
-
-def format_float(v: float, digits: int = 4) -> str:
-    return f"{v:.{digits}f}"
 
 
 def safe_float(v) -> float | None:
@@ -55,15 +51,55 @@ def safe_float(v) -> float | None:
         return None
 
 
-def calc_fee_estimates(capital: float, final_size: float, fee_bps_per_side: float) -> tuple[float, float, float]:
-    fee_rate_side = fee_bps_per_side / 10000.0
-    gross_notional = capital * final_size * 2.0
-    entry_fee = gross_notional * fee_rate_side
-    roundtrip_fee = gross_notional * fee_rate_side * 2.0
-    return gross_notional, entry_fee, roundtrip_fee
+def load_cumulative_performance() -> dict:
+    """3/20からの累積パフォーマンスを読み込む"""
+    if not PERF_CSV.exists():
+        return {"status": "perf_error", "message": "test_mar20_to_today.csv が見つかりません"}
+    
+    df = pd.read_csv(PERF_CSV)
+    if len(df) == 0:
+        return {"status": "perf_error", "message": "CSVが空です"}
+    
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    
+    # 累積リターン計算
+    start_capital = 1.0
+    final_capital = None
+    if "cum_curve" in df.columns:
+        final_capital = df["cum_curve"].iloc[-1]
+    
+    cum_return_pct = (final_capital - start_capital) * 100 if final_capital else 0
+    
+    # 勝率計算
+    wins = 0
+    total = 0
+    if "strategy_return" in df.columns:
+        wins = (df["strategy_return"] > 0).sum()
+        total = len(df)
+    
+    win_rate = (wins / total * 100) if total > 0 else 0
+    
+    # 本日分（最新行）
+    latest = df.iloc[-1].to_dict()
+    today_return = safe_float(latest.get("strategy_return", 0))
+    today_long = safe_float(latest.get("long_return", 0))
+    today_short = safe_float(latest.get("short_return", 0))
+    
+    return {
+        "status": "OK",
+        "cum_return_pct": cum_return_pct,
+        "win_rate": win_rate,
+        "total_days": total,
+        "today_return": today_return * 100 if today_return else 0,
+        "today_long": today_long * 100 if today_long else 0,
+        "today_short": today_short * 100 if today_short else 0,
+        "wins": wins,
+        "df": df
+    }
 
 
-def load_latest_row() -> dict[str, str]:
+def load_latest_position() -> dict[str, str]:
+    """paper_trade_log.csvから現在のポジション情報を取得"""
     if not LOG_CSV.exists():
         return {"status": "paper_trade_log.csv が見つかりません"}
 
@@ -78,12 +114,9 @@ def load_latest_row() -> dict[str, str]:
     row = df.iloc[-1].to_dict()
     out: dict[str, str] = {}
 
-    today = dt.date.today()
     row_date = pd.to_datetime(row.get("date"), errors="coerce")
     out["status"] = "OK"
     out["row_date"] = row_date.date().isoformat() if pd.notna(row_date) else "N/A"
-    out["today"] = today.isoformat()
-    out["is_today"] = str(pd.notna(row_date) and row_date.date() == today)
 
     for k in [
         "signal_strength",
@@ -92,113 +125,69 @@ def load_latest_row() -> dict[str, str]:
         "dd_scale",
         "current_dd",
         "capital",
-        "peak",
         "long_1",
         "long_2",
         "long_3",
         "short_1",
         "short_2",
         "short_3",
-        "actual_return",
-        "fee_bps_per_side",
-        "gross_notional",
-        "fee_entry_est",
-        "fee_roundtrip_est",
     ]:
         out[k] = "" if k not in row else str(row.get(k, ""))
 
     return out
 
 
-def build_mail_body(latest: dict[str, str], run_log_text: str, fee_bps_per_side: float) -> str:
+def build_mail_body(perf: dict, position: dict, fee_bps_per_side: float) -> str:
+    """3/20からの累積レポート + 本日のポジション情報"""
     lines: list[str] = []
+    lines.append("=" * 60)
     lines.append("LeadLag Daily Report")
+    lines.append(f"3月20日 ~ 本日のパフォーマンス")
     lines.append(f"Generated at: {dt.datetime.now().isoformat(timespec='seconds')}")
+    lines.append("=" * 60)
     lines.append("")
-
-    if latest.get("status") != "OK":
-        lines.append(f"Status: {latest.get('status')}")
-        lines.append("")
-        lines.append("Run log:")
-        lines.append(run_log_text.strip() if run_log_text.strip() else "(empty)")
+    
+    if perf.get("status") != "OK":
+        lines.append(f"⚠ Error: {perf.get('message', 'Unknown error')}")
         return "\n".join(lines)
-
-    row_date = latest.get("row_date", "N/A")
-    is_today = latest.get("is_today", "False")
-    lines.append(f"Signal date in log: {row_date}")
-    lines.append(f"Matches today: {is_today}")
+    
+    # 累積リターン
+    cum_return = perf.get("cum_return_pct", 0)
+    sign = "+" if cum_return >= 0 else ""
+    lines.append(f"【累積パフォーマンス (3/20 ~ 本日)】")
+    lines.append(f"累積リターン: {sign}{cum_return:.2f}%")
+    lines.append(f"取引日数: {perf.get('total_days', 0)} 日")
+    lines.append(f"勝率: {perf.get('win_rate', 0):.1f}% ({perf.get('wins', 0)} / {perf.get('total_days', 0)})")
     lines.append("")
-
-    lines.append("Signal summary")
-    lines.append(f"- signal_strength: {latest.get('signal_strength', '')}")
-    lines.append(f"- percentile: {latest.get('signal_pct', '')}%")
-    lines.append(
-        f"- long: {latest.get('long_1', '')}, {latest.get('long_2', '')}, {latest.get('long_3', '')}"
-    )
-    lines.append(
-        f"- short: {latest.get('short_1', '')}, {latest.get('short_2', '')}, {latest.get('short_3', '')}"
-    )
+    
+    # 本日のパフォーマンス
+    today_ret = perf.get("today_return", 0)
+    today_long = perf.get("today_long", 0)
+    today_short = perf.get("today_short", 0)
+    
+    sign_ret = "+" if today_ret >= 0 else ""
+    sign_long = "+" if today_long >= 0 else ""
+    sign_short = "+" if today_short >= 0 else ""
+    
+    lines.append(f"【本日のパフォーマンス】")
+    lines.append(f"総リターン: {sign_ret}{today_ret:.3f}%")
+    lines.append(f"  ロング側:   {sign_long}{today_long:.3f}%")
+    lines.append(f"  ショート側: {sign_short}{today_short:.3f}%")
     lines.append("")
-
-    final_size = safe_float(latest.get("final_size"))
-    capital = safe_float(latest.get("capital"))
-    dd = safe_float(latest.get("current_dd"))
-    dd_scale = safe_float(latest.get("dd_scale"))
-
-    lines.append("Risk / sizing")
-    if final_size is not None:
-        lines.append(f"- final_size: {format_float(final_size, 3)}x")
-    if dd is not None:
-        lines.append(f"- current_dd: {dd * 100:.2f}%")
-    if dd_scale is not None:
-        lines.append(f"- dd_scale: {format_float(dd_scale, 2)}x")
-    if capital is not None:
-        lines.append(f"- capital: {capital:,.0f} JPY")
+    
+    # 現在のポジション
+    if position.get("status") == "OK":
+        lines.append(f"【現在のポジション】")
+        lines.append(f"信号強度: {position.get('signal_strength', '')}")
+        lines.append(f"信号パーセンタイル: {position.get('signal_pct', '')}%")
+        lines.append(f"ロング（3セクター）: {position.get('long_1', '')}, {position.get('long_2', '')}, {position.get('long_3', '')}")
+        lines.append(f"ショート（3セクター）: {position.get('short_1', '')}, {position.get('short_2', '')}, {position.get('short_3', '')}")
+        lines.append(f"ポジションサイズ: {position.get('final_size', '')}x")
+        lines.append(f"ドローダウン: {position.get('current_dd', '')}")
+        lines.append(f"ドローダウン調整倍率: {position.get('dd_scale', '')}x")
     lines.append("")
-
-    lines.append("Fee estimates")
-    fee_bps_logged = safe_float(latest.get("fee_bps_per_side"))
-    fee_bps = fee_bps_logged if fee_bps_logged is not None else fee_bps_per_side
-
-    gross_notional = safe_float(latest.get("gross_notional"))
-    fee_entry_est = safe_float(latest.get("fee_entry_est"))
-    fee_roundtrip_est = safe_float(latest.get("fee_roundtrip_est"))
-
-    if (
-        gross_notional is None
-        or fee_entry_est is None
-        or fee_roundtrip_est is None
-    ) and capital is not None and final_size is not None:
-        gross_notional, fee_entry_est, fee_roundtrip_est = calc_fee_estimates(
-            capital=capital,
-            final_size=final_size,
-            fee_bps_per_side=fee_bps,
-        )
-
-    lines.append(f"- fee_bps_per_side: {fee_bps:.2f} bps")
-    if gross_notional is not None:
-        lines.append(f"- gross_notional(long+short): {gross_notional:,.0f} JPY")
-    if fee_entry_est is not None:
-        lines.append(f"- entry_fee_estimate: {fee_entry_est:,.0f} JPY")
-    if fee_roundtrip_est is not None:
-        lines.append(f"- roundtrip_fee_estimate: {fee_roundtrip_est:,.0f} JPY")
-    lines.append("")
-
-    actual_return = safe_float(latest.get("actual_return"))
-    if actual_return is not None and final_size is not None and fee_bps is not None:
-        # strategy returnからの簡易控除モデル: roundtrip fee rate = final_size*4*fee_rate_side
-        fee_rate_side = fee_bps / 10000.0
-        fee_rate_roundtrip = final_size * 4.0 * fee_rate_side
-        net_actual = actual_return - fee_rate_roundtrip
-        lines.append("Actual return check")
-        lines.append(f"- actual_return(gross): {actual_return * 100:.3f}%")
-        lines.append(f"- estimated_roundtrip_fee_rate: {fee_rate_roundtrip * 100:.3f}%")
-        lines.append(f"- actual_return(net_est): {net_actual * 100:.3f}%")
-        lines.append("")
-
-    lines.append("Raw run log")
-    lines.append(run_log_text.strip() if run_log_text.strip() else "(empty)")
-
+    
+    lines.append("=" * 60)
     return "\n".join(lines)
 
 
@@ -228,20 +217,23 @@ def send_mail(subject: str, body: str) -> None:
 
 def main() -> None:
     fee_bps_per_side = float(os.getenv("TRADE_FEE_BPS_PER_SIDE", "5.0"))
-    run_log_path = Path(
-        os.getenv("DAILY_RUN_LOG_PATH", str(RESULTS_DIR / "daily_run_output.txt"))
-    )
-    run_log_text = ""
-    if run_log_path.exists():
-        run_log_text = run_log_path.read_text(encoding="utf-8", errors="ignore")
-
-    latest = load_latest_row()
-    subject_date = latest.get("row_date") or dt.date.today().isoformat()
-    subject = f"[LeadLag] Daily Signal Report {subject_date}"
-    body = build_mail_body(latest=latest, run_log_text=run_log_text, fee_bps_per_side=fee_bps_per_side)
-
+    
+    perf = load_cumulative_performance()
+    position = load_latest_position()
+    
+    perf_date = dt.date.today().isoformat()
+    if perf.get("status") == "OK" and len(perf.get("df", [])) > 0:
+        latest_date = perf["df"].iloc[-1].get("date")
+        if hasattr(latest_date, "date"):
+            perf_date = latest_date.date().isoformat()
+        elif isinstance(latest_date, str):
+            perf_date = latest_date
+    
+    subject = f"[LeadLag] {perf_date} 日次報告"
+    body = build_mail_body(perf=perf, position=position, fee_bps_per_side=fee_bps_per_side)
+    
     send_mail(subject=subject, body=body)
-    print("Mail sent")
+    print("Mail sent successfully")
 
 
 if __name__ == "__main__":
