@@ -1,0 +1,173 @@
+=================================================================
+  10YEAR 全スパン分析レポート
+  生成日時: 2026-03-22 15:59:47
+=================================================================
+
+#################################################################
+# パターン分析（11）
+#################################################################
+[ERROR] パターン分析（11）
+Traceback (most recent call last):
+  File "C:\Users\hg317\Desktop\projects\leadlag\scripts\11_analyze_patterns.py", line 26, in <module>
+    trades  = pd.read_csv(HISTORY_DIR / "trades.csv",  index_col=0, parse_dates=True)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 300, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1645, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1904, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\common.py", line 926, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\hg317\\Desktop\\projects\\leadlag\\scripts\\data\\history\\trades.csv'
+
+
+
+#################################################################
+# 業種別統計（A）
+#################################################################
+[ERROR] 業種別統計（A）
+Traceback (most recent call last):
+  File "C:\Users\hg317\Desktop\projects\leadlag\scripts\12_analyze_sectors.py", line 19, in <module>
+    trades  = pd.read_csv(HISTORY_DIR / "trades.csv",  index_col=0, parse_dates=True)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 300, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1645, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1904, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\common.py", line 926, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\hg317\\Desktop\\projects\\leadlag\\scripts\\data\\history\\trades.csv'
+
+
+
+#################################################################
+# 市場環境統計（B）
+#################################################################
+[ERROR] 市場環境統計（B）
+Traceback (most recent call last):
+  File "C:\Users\hg317\Desktop\projects\leadlag\scripts\13_analyze_market_env.py", line 39, in <module>
+    trades = pd.read_csv(HISTORY_DIR / "trades.csv",  index_col=0, parse_dates=True)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 300, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1645, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1904, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\common.py", line 926, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\hg317\\Desktop\\projects\\leadlag\\scripts\\data\\history\\trades.csv'
+
+
+
+#################################################################
+# 業種ペア統計（C）
+#################################################################
+[ERROR] 業種ペア統計（C）
+Traceback (most recent call last):
+  File "C:\Users\hg317\Desktop\projects\leadlag\scripts\14_analyze_pairs.py", line 21, in <module>
+    trades = pd.read_csv(HISTORY_DIR / "trades.csv", index_col=0, parse_dates=True)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 300, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1645, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1904, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\common.py", line 926, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\hg317\\Desktop\\projects\\leadlag\\scripts\\data\\history\\trades.csv'
+
+
+
+#################################################################
+# シグナル非対称性（D）
+#################################################################
+[ERROR] シグナル非対称性（D）
+Traceback (most recent call last):
+  File "C:\Users\hg317\Desktop\projects\leadlag\scripts\15_analyze_signal_asymmetry.py", line 22, in <module>
+    trades  = pd.read_csv(HISTORY_DIR / "trades.csv",  index_col=0, parse_dates=True)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 873, in read_csv
+    return _read(filepath_or_buffer, kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 300, in _read
+    parser = TextFileReader(filepath_or_buffer, **kwds)
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1645, in __init__
+    self._engine = self._make_engine(f, self.engine)
+                   ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\parsers\readers.py", line 1904, in _make_engine
+    self.handles = get_handle(
+                   ~~~~~~~~~~^
+        f,
+        ^^
+    ...<6 lines>...
+        storage_options=self.options.get("storage_options", None),
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\hg317\Desktop\projects\leadlag\.venv\Lib\site-packages\pandas\io\common.py", line 926, in get_handle
+    handle = open(
+        handle,
+    ...<3 lines>...
+        newline="",
+    )
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\hg317\\Desktop\\projects\\leadlag\\scripts\\data\\history\\trades.csv'
+

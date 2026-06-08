@@ -1,0 +1,47 @@
+================================================================================
+Phase 2修正版: 最終レポート
+================================================================================
+
+[銘柄データ確認]
+      sector sector_name  ticker  num_days start_date end_date  available
+      energy       エネルギー    5020         0        N/A      N/A      False
+     trading          商社    8053         0        N/A      N/A      False
+     finance          金融    8725         0        N/A      N/A      False
+construction          建設    5233         0        N/A      N/A      False
+ it_services        IT通信    9984         0        N/A      N/A      False
+ electronics          電機    6971         0        N/A      N/A      False
+       steel          鉄鋼    5713         0        N/A      N/A      False
+   utilities        電力ガス    9501         0        N/A      N/A      False
+       banks          銀行    8354         0        N/A      N/A      False
+      pharma         医薬品    4536         0        N/A      N/A      False
+        auto         自動車    7282         0        N/A      N/A      False
+        food          食品    2587         0        N/A      N/A      False
+   materials        素材化学    4182         0        N/A      N/A      False
+   machinery          機械    6301         0        N/A      N/A      False
+   transport          運輸    9020         0        N/A      N/A      False
+  realestate         不動産    8801         0        N/A      N/A      False
+
+[等サイズ版 vs 方式E版 比較]
+指標          等サイズ版   方式E版      改善度
+------------------------------------------------------------
+年率            8.21%      8.75%     +0.54%
+Sharpe         0.585     0.679    +0.094
+MaxDD         -37.14%    -27.80%     +9.34%
+Calmar         0.221     0.315    +0.094
+勝率           32.75%     32.75%     +0.00%
+
+[ETF版 vs 個別株版（方式E）比較]
+指標          ETF版        個別株版     差分
+------------------------------------------------------------
+年率           28.23%      8.75%    -19.48%
+Sharpe         1.868     0.679    -1.189
+MaxDD         -15.76%    -27.80%    -12.04%
+Calmar         1.792     0.315    -1.477
+
+[方式Eサイジングの効果]
+✓ サイジングが機能している（+0.54% 改善）
+
+[注記]
+- 手数料・スプレッド・税金は未計上
+- 小売は前回データ不足のため除外
+- 修正後16銘柄でバックテスト実施

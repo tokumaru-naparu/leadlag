@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ARCHIVE=\"archive/cleanup_20260330\")",
+      "Bash(mkdir -p \"$ARCHIVE/data\" \"$ARCHIVE/scripts\" \"$ARCHIVE/output\")",
+      "Bash(mv data/history \"$ARCHIVE/data/history\")",
+      "Bash(py -c \":*)",
+      "Bash(gh repo:*)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(python -c \"import ast; ast.parse\\(open\\(''scripts/update_daily_pipeline.py''\\).read\\(\\)\\); print\\(''Syntax OK''\\)\")",
+      "Bash(py -c \"import ast; ast.parse\\(open\\(''scripts/update_daily_pipeline.py''\\).read\\(\\)\\); print\\(''Syntax OK''\\)\")",
+      "Bash(py -c \"import ast; ast.parse\\(open\\(''scripts/update_daily_pipeline.py'', encoding=''utf-8''\\).read\\(\\)\\); print\\(''Syntax OK''\\)\")"
+    ]
+  }
+}
